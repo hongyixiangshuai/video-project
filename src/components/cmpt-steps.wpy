@@ -1,0 +1,264 @@
+<style lang="scss">
+.cmpt-steps--steps.cmpt-steps--5 .cmpt-steps__step {
+  width: 25%;
+}
+
+.cmpt-steps--steps.cmpt-steps--4 .cmpt-steps__step {
+  width: 33%;
+}
+
+.cmpt-steps--steps.cmpt-steps--3 .cmpt-steps__step {
+  width: 50%;
+}
+
+.cmpt-steps--steps .cmpt-steps__step {
+  position: relative;
+  float: left;
+  padding-bottom: 25px;
+  color: #b1b1b1;
+}
+
+.cmpt-steps--steps .cmpt-steps__title {
+  transform: translateX(-50%);
+  font-size: 10px;
+  text-align: center;
+}
+
+.cmpt-steps--steps .cmpt-steps__icons {
+  position: absolute;
+  top: 30px;
+  left: -10px;
+  padding: 0 8px;
+  background-color: #fff;
+  z-index: 10;
+}
+
+.cmpt-steps--steps .cmpt-steps__circle {
+  display: block;
+  position: relative;
+  width: 5px;
+  height: 5px;
+  background-color: #e5e5e5;
+  border-radius: 50%;
+}
+
+.cmpt-steps--steps .cmpt-steps__line {
+  position: absolute;
+  left: 0px;
+  top: 32px;
+  width: 100%;
+  height: 1px;
+  background-color: #e5e5e5;
+}
+
+/* 已完成的steps */
+.cmpt-steps--steps .cmpt-steps__step--done {
+  color: #333;
+}
+
+.cmpt-steps--steps .cmpt-steps__step--done .cmpt-steps__line {
+  background-color: #06bf04;
+}
+
+.cmpt-steps--steps .cmpt-steps__step--done .cmpt-steps__circle {
+  width: 5px;
+  height: 5px;
+  background-color: #09bb07;
+}
+
+/* 正在进行中的steps */
+.cmpt-steps--steps .cmpt-steps__step--cur .cmpt-steps__icons {
+  top: 25px;
+  left: -14px;
+}
+
+.cmpt-steps--steps .cmpt-steps__step--cur .cmpt-steps__circle {
+  width: 13px;
+  height: 13px;
+  background-image: url('https://b.yzcdn.cn/v2/image/wap/success_small@2x.png');
+  background-size: 13px 13px;
+}
+
+.cmpt-steps--steps .cmpt-steps__step--cur .cmpt-steps__line {
+  background-color: #e5e5e5;
+}
+
+/* 各种不同位置的 */
+.cmpt-steps--steps .cmpt-steps__step--first-child .cmpt-steps__title {
+  margin-left: 0;
+  transform: none;
+  text-align: left;
+}
+
+.cmpt-steps--steps .cmpt-steps__step--first-child .cmpt-steps__icons {
+  left: -7px;
+}
+
+.cmpt-steps--steps .cmpt-steps__step--last-child {
+  position: absolute;
+  right: 0;
+  top: 0;
+  text-align: right;
+}
+
+.cmpt-steps--steps .cmpt-steps__step--last-child .cmpt-steps__title {
+  transform: none;
+  text-align: right;
+}
+
+.cmpt-steps--steps .cmpt-steps__step--last-child .cmpt-steps__icons {
+  left: auto;
+  right: -6px;
+}
+
+.cmpt-steps--steps .cmpt-steps__step--last-child .cmpt-steps__line {
+  display: none;
+}
+
+/* 有描述的step */
+.cmpt-steps--steps .cmpt-steps__step--db-title {
+  min-height: 29px;
+}
+
+.cmpt-steps--steps .cmpt-steps__step--db-title .cmpt-steps__line {
+  top: 45px;
+}
+
+.cmpt-steps--steps .cmpt-steps__step--db-title .cmpt-steps__icons {
+  top: 43px;
+}
+
+.cmpt-steps--steps .cmpt-steps__step--db-title.cmpt-steps__step--cur .cmpt-steps__icons {
+  top: 39px;
+}
+
+.cmpt-steps--vsteps {
+  color: #999;
+  font-size: 14px;
+}
+
+.cmpt-steps--vsteps .cmpt-steps__step {
+  position: relative;
+  padding: 15px 0;
+}
+
+.cmpt-steps--vsteps .cmpt-steps__step--done {
+  color: #44bb00;
+}
+
+.cmpt-steps--vsteps .cmpt-steps__line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 7px;
+  width: 1px;
+  background-color: #e5e5e5;
+}
+
+.cmpt-steps--vsteps .cmpt-steps__title {
+  display: inline-block;
+  line-height: 20px;
+  padding-left: 27px;
+}
+
+.cmpt-steps--vsteps .cmpt-steps__title--desc {
+  padding-left: 3px;
+}
+
+.cmpt-steps--vsteps .cmpt-steps__icons {
+  position: absolute;
+  left: 7px;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  padding: 3px 0;
+  background-color: #fff;
+}
+
+.cmpt-steps--vsteps .cmpt-steps__circle {
+  width: 5px;
+  height: 5px;
+  background-color: #cacaca;
+  border-radius: 10px;
+}
+
+.cmpt-steps--vsteps .cmpt-steps__step--done .cmpt-steps__circle {
+  width: 5px;
+  height: 5px;
+  background-color: #09bb07;
+}
+
+.cmpt-steps--vsteps .cmpt-steps__step--cur .cmpt-steps__circle {
+  width: 13px;
+  height: 13px;
+  background: transparent url('https://b.yzcdn.cn/v2/image/wap/success_small@2x.png');
+  background-size: 13px 13px;
+  border-radius: 0;
+}
+
+.cmpt-steps--vsteps .cmpt-steps__icon--active {
+  width: 13px;
+  height: 13px;
+}
+
+.cmpt-steps--vsteps .cmpt-steps__step--first-child .cmpt-steps__title::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 50%;
+  left: 7px;
+  width: 1px;
+  background-color: #fff;
+  z-index: 1;
+}
+
+.cmpt-steps--vsteps .cmpt-steps__step--last-child .cmpt-steps__title::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  bottom: 0%;
+  left: 7px;
+  width: 1px;
+  background-color: #fff;
+  z-index: 1;
+}
+
+.cmpt-steps {
+  position: relative;
+}
+</style>
+<template>
+  <view class="cmpt-steps cmpt-steps--{{ type == 'vertical' ? 'vsteps' : 'steps' }} cmpt-steps--{{ steps.length }} {{ className }}">
+    <view
+      wx:for="{{ steps }}" wx:for-item="step" wx:key="unique" wx:for-index="index"
+      class="cmpt-steps__step {{ hasDesc ? 'cmpt-steps__step--db-title' : '' }} {{ index == 0 ? 'cmpt-steps__step--first-child' : '' }} {{ index == steps.length - 1 ? 'cmpt-steps__step--last-child' : '' }} {{ step.done ? 'cmpt-steps__step--done' : '' }} {{ step.current ? 'cmpt-steps__step--cur' : '' }}"
+    >
+      <view class="cmpt-steps__title">{{ step.text }}</view>
+      <view wx:if="{{ hasDesc && step.desc }}" class="cmpt-steps__title cmpt-steps__title--desc">{{ step.desc }}</view>
+      <view class="cmpt-steps__icons">
+        <view class="cmpt-steps__circle"></view>
+      </view>
+      <view class="cmpt-steps__line"></view>
+    </view>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+
+export default class cmptSteps extends wepy.component {
+  props = {
+    steps: Object,
+    type: String,
+    hasDesc: {
+      type: Boolean,
+      default: false
+    },
+    className: {
+      type: String,
+      default: ''
+    }
+  }
+  data = {}
+  methods = {}
+}
+</script>

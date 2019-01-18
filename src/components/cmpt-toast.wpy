@@ -1,0 +1,60 @@
+<style lang="less">
+.cmpt-toast {
+  position: fixed;
+  top: 35%;
+  left: 20%;
+  transform: translateZ(0) translateY(-100%);
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 14px;
+  width: 60%;
+  line-height: 1.5em;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 10px;
+  text-align: center;
+  border-radius: 4px;
+  z-index: 100;
+}
+</style>
+<template>
+  <view class="cmpt-toast" wx:if="{{ cmptToast.show }}" @tap="clearcmptToast">
+    {{ cmptToast.title }}</view>
+</template>
+<script>
+import wepy from 'wepy'
+
+export default class cmptToast extends wepy.component {
+  props = {}
+  data = {
+    cmptToast: {}
+  }
+  methods = {
+    showcmptToast({title, timeout}) {
+      var cmptToast = this.cmptToast || {}
+      clearTimeout(cmptToast.timer)
+
+      // 弹层设置~
+      this.cmptToast = {
+        show: true,
+        title
+      }
+      this.$apply()
+
+      var timer = setTimeout(() => {
+        this.methods.clearcmptToast.call(this)
+      }, timeout || 3000)
+
+      this.cmptToast.timer = timer
+      this.$apply()
+    },
+    clearcmptToast() {
+      var cmptToast = this.cmptToast || {}
+      clearTimeout(cmptToast.timer)
+
+      this.cmptToast.show = false
+      this.$apply()
+    }
+  }
+}
+</script>

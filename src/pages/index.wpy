@@ -1,0 +1,255 @@
+<template>
+  <view class="container">
+    <skeletonLoading wx:if="{{isLoading}}"></skeletonLoading>
+    <skeletonLoading wx:if="{{isLoading}}"></skeletonLoading>
+    <skeletonLoading wx:if="{{isLoading}}"></skeletonLoading>
+    <skeletonLoading wx:if="{{isLoading}}"></skeletonLoading>
+    <skeletonLoading wx:if="{{isLoading}}"></skeletonLoading>
+    <view wx:else>
+      <view class="search-comp">
+        <view class="search-wrap-inner">
+          <input class="search-wrap" placeholder="搜索" confirm-type="search" @confirm="onConfirm" value="{{query}}"/>
+        </view>
+      </view>
+      <block wx:for="{{ items }}" wx:key="id">
+        <view class="cmpt-panel cmpt-panel--without-margin-top" @tap="gotoDetail({{item}})">
+          <view class="cmpt-cell">
+            <view class="video">
+              <image src="{{item.cover.feed}}" mode="widthFix"/>
+              <view class="cmpt-tag">{{item.durationText}}</view>
+            </view>
+            <view class="content">
+              <image class="avatar" src="{{item.author.icon}}"/>
+              <view class="text">
+                <text class="title">{{item.title}}</text>
+                <text class="subtitle">{{item.author.name}} / #{{item.category}} /
+                  {{item.consumption.collectionCount}}人喜欢
+                </text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+      <cmptLoadmore1 :loading="_true" wx:if="{{showLoadMore}}"></cmptLoadmore1>
+      <cmptLoadmore2 :nomore="_true" wx:if="{{showNoMore}}"></cmptLoadmore2>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import {getItems, searchItems} from '../api/item'
+  import {secondToTime} from '../common/utils'
+  import cmptLoadmore from '../components/cmpt-loadmore'
+  import skeletonLoading from '../components/cmpt-skeleton-loading'
+  import {getAppVersion} from '../api/app'
+
+  export default class Index extends wepy.page {
+    config = {
+      enablePullDownRefresh: true
+    }
+    components = {
+      cmptLoadmore1: cmptLoadmore,
+      cmptLoadmore2: cmptLoadmore,
+      skeletonLoading: skeletonLoading
+    }
+    data = {
+      items: [],
+      showLoadMore: false,
+      showNoMore: false,
+      _true: true,
+      nextPage: '',
+      isLoading: true,
+      isSearch: false,
+      query: ''
+    }
+    methods = {
+      gotoDetail(item) {
+        wepy.$instance.globalData.selectedItem = item
+        wepy.navigateTo({
+          url: 'detail'
+        })
+      },
+      onConfirm(e) {
+        wx.showToast({
+          title: '搜索中',
+          icon: 'loading',
+          duration: 2000
+        })
+        this.isSearch = true
+        this.query = e.detail.value
+        this.searchData(this.query)
+      }
+    }
+
+    onLoad() {
+      getAppVersion().then((res) => {
+        wepy.$instance.globalData.showPlayer = res.is_valid
+      })
+    }
+
+    onShow() {
+      if (this.items.length === 0) {
+        this.loadData()
+      }
+    }
+
+    loadData(nextPage) {
+      getItems(nextPage).then((res) => {
+        this.handleItems(nextPage, res)
+      }).catch((rej) => {
+        console.log(rej)
+      })
+    }
+
+    searchData(q, nextPage) {
+      searchItems(q, nextPage).then((res) => {
+        this.handleItems(nextPage, res)
+        wx.hideToast()
+      }).catch((rej) => {
+        console.log(rej)
+        wx.hideToast()
+      })
+    }
+
+    handleItems(nextPage, res) {
+      this.items = nextPage === undefined ? res.data : this.items.concat(res.data)
+      this.items.forEach(function (item) {
+        item.durationText = secondToTime(item.duration)
+        item.dateText = new Date(item.releaseTime).toLocaleDateString()
+      })
+      this.nextPage = res.next_page_url
+      this.showLoadMore = this.nextPage
+      this.showNoMore = !this.nextPage
+      this.isLoading = false
+      wepy.stopPullDownRefresh()
+      this.$apply()
+    }
+
+    onPullDownRefresh() {
+      this.isSearch = false
+      this.query = ''
+      this.loadData()
+    }
+
+    onReachBottom() {
+      this.showLoadMore = this.nextPage
+      this.showNoMore = !this.nextPage
+      this.$apply()
+      if (this.nextPage) {
+        if (this.isSearch) {
+          this.searchData(this.query, this.nextPage)
+        } else {
+          this.loadData(this.nextPage)
+        }
+      }
+    }
+
+    onShareAppMessage(res) {
+      return {
+        title: '视频分享, 您每天成长的源泉',
+        path: '/pages/index'
+      }
+    }
+  }
+</script>
+
+<style lang="scss">
+  @import '../styles/panel.scss';
+  @import '../styles/cell.scss';
+  @import '../styles/tag.scss';
+
+  .container {
+
+    .search-comp {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      padding: 8px 10px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .search-wrap-inner {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      background: #f6f6f6;
+      padding: 6px 8px;
+      border-radius: 4px;
+    }
+    .search-wrap {
+      width: 100%;
+      font-size: 16px;
+      margin-left: 6px;
+      margin-right: 5px;
+    }
+    .ds-search {
+      font-size: 18px;
+      color: #ccc;
+    }
+
+    .cmpt-field {
+      background-color: grey;
+    }
+    .cmpt-field--wrapped {
+      padding: 0 10px;
+      margin: 0;
+    }
+    .cmpt-field__input {
+      background-color: #fff;
+    }
+    .cmpt-panel {
+      .cmpt-cell {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 10px 10px 10px 10px;
+        .video {
+          width: 100%;
+          position: relative;
+          image {
+            width: 100%;
+            border-radius: 4px;
+          }
+          .cmpt-tag {
+            position: absolute;
+            bottom: 15px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.4);
+
+            &::after {
+              @include hairline;
+              border-width: 0;
+            }
+          }
+        }
+        .content {
+          margin-top: 10px;
+          display: flex;
+          flex-direction: row;
+          width: 100%;
+          .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+          }
+          .text {
+            display: flex;
+            flex-direction: column;
+            margin-left: 10px;
+            justify-content: center;
+            .title {
+              font-size: 14px;
+              font-weight: bold;
+            }
+            .subtitle {
+              margin-top: 5px;
+              font-size: 11px;
+              color: grey;
+            }
+          }
+        }
+      }
+    }
+  }
+
+</style>

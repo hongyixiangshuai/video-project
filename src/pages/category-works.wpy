@@ -1,0 +1,218 @@
+<template>
+  <view class="container">
+    <skeletonLoading wx:if="{{isLoading}}"></skeletonLoading>
+    <skeletonLoading wx:if="{{isLoading}}"></skeletonLoading>
+    <skeletonLoading wx:if="{{isLoading}}"></skeletonLoading>
+    <skeletonLoading wx:if="{{isLoading}}"></skeletonLoading>
+    <skeletonLoading wx:if="{{isLoading}}"></skeletonLoading>
+    <view wx:else>
+      <view class="category-header" style="background-image: url({{categoryInfo.headerImage}})">
+        <text class="category-title">#{{categoryInfo.name}}</text>
+        <text class="category-description">{{categoryInfo.description}}</text>
+      </view>
+      <block wx:for="{{ items }}" wx:key="id">
+        <view class="cmpt-panel cmpt-panel--without-margin-top" @tap="gotoDetail({{item}})">
+          <view class="cmpt-cell">
+            <view class="video">
+              <image src="{{item.cover.feed}}" mode="widthFix"/>
+              <view class="cmpt-tag">{{item.durationText}}</view>
+            </view>
+            <view class="content">
+              <image class="avatar" src="{{item.author.icon}}"/>
+              <view class="text">
+                <text class="title">{{item.title}}</text>
+                <text class="subtitle">{{item.author.name}} / #{{item.category}} /
+                  {{item.consumption.collectionCount}}人喜欢
+                </text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+      <cmptLoadmore1 :loading="_true" wx:if="{{showLoadMore}}"></cmptLoadmore1>
+      <cmptLoadmore2 :nomore="_true" wx:if="{{showNoMore}}"></cmptLoadmore2>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import {getCategoryItems} from '../api/item'
+  import {secondToTime} from '../common/utils'
+  import cmptLoadmore from '../components/cmpt-loadmore'
+  import skeletonLoading from '../components/cmpt-skeleton-loading'
+  import {getCategory} from '../api/category'
+
+  export default class Index extends wepy.page {
+    config = {
+      enablePullDownRefresh: true
+    }
+    components = {
+      cmptLoadmore1: cmptLoadmore,
+      cmptLoadmore2: cmptLoadmore,
+      skeletonLoading: skeletonLoading
+    }
+    data = {
+      cid: '',
+      items: [],
+      showLoadMore: false,
+      showNoMore: false,
+      _true: true,
+      nextPage: '',
+      isLoading: true,
+      categoryInfo: {}
+    }
+    methods = {
+      gotoDetail(item) {
+        wepy.$instance.globalData.selectedItem = item
+        wepy.navigateTo({
+          url: 'detail'
+        })
+      }
+    }
+
+    onLoad(options) {
+      this.cid = options.cid
+      getCategory(this.cid).then((res) => {
+        this.categoryInfo = res
+        this.$apply()
+      })
+    }
+
+    onShow() {
+      if (this.items.length === 0) {
+        this.loadData()
+      }
+    }
+
+    loadData(nextPage) {
+      getCategoryItems(this.cid, nextPage).then((res) => {
+        this.items = nextPage === undefined ? res.data : this.items.concat(res.data)
+        this.items.forEach(function (item) {
+          item.durationText = secondToTime(item.duration)
+          item.dateText = new Date(item.releaseTime).toLocaleDateString()
+        })
+        this.nextPage = res.next_page_url
+        this.isLoading = false
+        wepy.stopPullDownRefresh()
+        this.$apply()
+      }).catch((rej) => {
+        console.log(rej)
+      })
+    }
+
+    onPullDownRefresh() {
+      this.loadData()
+    }
+
+    onReachBottom() {
+      if (this.nextPage) {
+        this.showLoadMore = true
+        this.showNoMore = false
+        this.$apply()
+        this.loadData(this.nextPage)
+      } else {
+        this.showLoadMore = false
+        this.showNoMore = true
+        this.$apply()
+      }
+    }
+
+    onShareAppMessage(res) {
+      return {
+        title: '视频学习, 您每天进步的来源',
+        path: '/pages/index'
+      }
+    }
+  }
+</script>
+
+<style lang="scss">
+  @import '../styles/panel.scss';
+  @import '../styles/cell.scss';
+  @import '../styles/tag.scss';
+
+  .container {
+    .category-header {
+      height: 180px;
+      background-size: cover;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #fff;
+      .category-title {
+        margin-top: 40px;
+        font-size: 20px;
+        font-weight: bold;
+      }
+      .category-description {
+        font-size: 12px;
+        margin-top: 10px;
+      }
+    }
+    .cmpt-field {
+      background-color: grey;
+    }
+    .cmpt-field--wrapped {
+      padding: 0 10px;
+      margin: 0;
+    }
+    .cmpt-field__input {
+      background-color: #fff;
+    }
+    .cmpt-panel {
+      .cmpt-cell {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 10px 10px 10px 10px;
+        .video {
+          width: 100%;
+          position: relative;
+          image {
+            width: 100%;
+            border-radius: 4px;
+          }
+          .cmpt-tag {
+            position: absolute;
+            bottom: 15px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.4);
+
+            &::after {
+              @include hairline;
+              border-width: 0;
+            }
+          }
+        }
+        .content {
+          margin-top: 10px;
+          display: flex;
+          flex-direction: row;
+          width: 100%;
+          .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+          }
+          .text {
+            display: flex;
+            flex-direction: column;
+            margin-left: 10px;
+            justify-content: center;
+            .title {
+              font-size: 14px;
+              font-weight: bold;
+            }
+            .subtitle {
+              margin-top: 5px;
+              font-size: 11px;
+              color: grey;
+            }
+          }
+        }
+      }
+    }
+  }
+
+</style>

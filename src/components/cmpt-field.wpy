@@ -1,0 +1,141 @@
+<style lang="scss">
+@import '../styles/cell.scss';
+
+.cmpt-field {
+  padding: 7px 15px;
+  color: #333;
+}
+
+.cmpt-field--wrapped {
+  margin: 0 15px;
+  background-color: #fff;
+
+  &::after {
+    left: 0;
+    border-width: 1px;
+    border-radius: 4px;
+  }
+}
+
+.cmpt-field--wrapped + .cmpt-field--wrapped {
+  margin-top: 10px;
+}
+
+.cmpt-field--error {
+  color: #f40;
+}
+
+/* 圆角输入框时，将边框也置红 */
+.cmpt-field--wrapped.cmpt-field--error::after {
+  border-color: #f40;
+}
+
+.cmpt-field__title {
+  color: #333;
+  min-width: 65px;
+  padding-right: 10px;
+}
+
+.cmpt-field__input {
+  flex: 1;
+  line-height: 1.6;
+  padding: 4px 0;
+  min-height: 22px;
+  height: auto;
+  font-size: 14px;
+}
+
+.cmpt-field__placeholder {
+  font-size: 14px;
+}
+
+.cmpt-field__input--right {
+  text-align: right;
+}
+</style>
+<template>
+  <view class="cmpt-cell cmpt-field {{ options.error ? 'cmpt-field--error' : '' }} {{ options.mode === 'wrapped' ? 'cmpt-field--wrapped' : '' }}">
+    <view
+      wx:if="{{ options.title }}"
+      class="cmpt-cell__hd cmpt-field__title">{{ options.title }}</view>
+    <textarea
+      wx:if="{{ options.type === 'textarea' }}"
+      auto-height
+      name="{{ options.name || componentId || '' }}"
+      value="{{ options.value }}"
+      placeholder="{{ options.placeholder }}"
+      class="cmpt-field__input cmpt-cell__bd {{ options.right ? 'cmpt-field__input--right' : '' }}"
+      placeholder-class="cmpt-field__placeholder"
+      bindinput="handlecmptFieldChange"
+      bindfocus="handlecmptFieldFocus"
+      bindblur="handlecmptFieldBlur"
+      data-component-id="{{ componentId || '' }}"></textarea>
+    <input
+      wx:else
+      type="{{ options.inputType || 'text' }}"
+      name="{{ options.name || componentId || '' }}"
+      value="{{ options.value }}"
+      placeholder="{{ options.placeholder }}"
+      class="cmpt-field__input cmpt-cell__bd {{ options.right ? 'cmpt-field__input--right' : '' }}"
+      placeholder-class="cmpt-field__placeholder"
+      bindinput="handlecmptFieldChange"
+      bindfocus="handlecmptFieldFocus"
+      bindblur="handlecmptFieldBlur"
+      data-component-id="{{ componentId || '' }}"/>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+
+export default class cmptField extends wepy.component {
+  props = {
+    options: {
+      type: Object,
+      default: {
+        right: true,
+        error: true,
+        name: '',
+        value: '',
+        type: 'textarea',
+        mode: 'wrapped',
+        title: '消费总额',
+        inputType: 'number',
+        placeholder: '询问收银员后输入'
+      }
+    },
+    componentId: String
+  }
+  data = {}
+  methods = {
+    clear() {
+      this.options.value = '  '
+      this.$apply()
+      this.options.value = ''
+      this.$apply()
+    },
+    handlecmptFieldChange(event) {
+      event.componentId = this.componentId
+
+      console.info('[zan:field:change]', event)
+
+      return this.$emit('cmptFieldChange', event)
+    },
+
+    handlecmptFieldFocus(event) {
+      event.componentId = this.componentId
+
+      console.info('[zan:field:focus]', event)
+
+      return this.$emit('cmptFieldFocus', event)
+    },
+
+    handlecmptFieldBlur(event) {
+      event.componentId = this.componentId
+
+      console.info('[zan:field:blur]', event)
+
+      return this.$emit('cmptFieldBlur', event)
+    }
+  }
+}
+</script>

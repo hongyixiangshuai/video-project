@@ -1,0 +1,345 @@
+<template>
+  <view class="container">
+    <view class="grid-const" wx:if="{{isValid}}">
+      <video id="videoPlayer"
+             class="video"
+             src="{{item.playUrl}}"
+             duration="{{item.duration}}"
+             autoplay="{{isWifi}}"
+             @play="onPlay"
+             controls>
+      </video>
+    </view>
+    <view class="grid-var">
+      <image class="poster" src="{{item.cover.feed}}" mode="widthFix" wx:if="{{isValid === false}}"/>
+      <scroll-view class="content" scroll-y="true" @scrolltolower="loadMoreComments">
+        <view class="text">
+          <text class="title">{{item.title}}</text>
+          <text class="subtitle">{{item.category}} / {{item.durationText}} / {{item.consumption.collectionCount}}人喜欢
+          </text>
+          <text class="detail">{{item.description}}</text>
+          <button class="cmpt-btn cmpt-btn--primary" @tap="copyUrl({{item.playUrl}})" wx:if="{{isValid === false}}">复制链接,
+            粘贴到浏览器中观看
+          </button>
+        </view>
+        <view class="cmpt-panel-title" wx:if="{{relatedItems.length}}">相关推荐</view>
+        <block wx:for="{{ relatedItems }}" wx:key="id">
+          <view class="cmpt-panel cmpt-panel--without-margin-top cmpt-panel--without-border" @tap="gotoDetail({{item}})">
+            <view class="cmpt-cell">
+              <view class="cmpt-cell__bd">
+                <view class="related-video">
+                  <image src="{{item.cover.feed}}" mode="aspectFill"/>
+                </view>
+                <view class="related-text">
+                  <text class="title">{{item.title}}</text>
+                  <text class="subtitle">#{{item.category}} / {{item.durationText}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </block>
+        <view class="cmpt-panel-title" wx:if="{{comments.length}}">评论 {{comments_count}}</view>
+        <block wx:for="{{ comments }}" wx:key="id">
+          <view class="cmpt-panel  cmpt-panel--without-border">
+            <view class="cmpt-cell">
+              <view class="cmpt-cell__bd">
+                <view class="avatar">
+                  <image src="{{item.user.avatar}}" mode="widthFix" />
+                </view>
+                <view class="comment">
+                  <text class="nickname">{{item.user.nickname}}</text>
+                  <text class="message">{{item.message}}</text>
+                  <text class="date">{{item.createDate}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </block>
+        <cmptLoadmore1 :loading="_true" wx:if="{{showLoadMore}}"></cmptLoadmore1>
+        <cmptLoadmore2 :nomore="_true" wx:if="{{showNoMore}}"></cmptLoadmore2>
+      </scroll-view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import {getItem, getItemComments, getRelatedItems} from '../api/item'
+  import {secondToTime, uniqueArray} from '../common/utils'
+  import cmptLoadmore from '../components/cmpt-loadmore'
+  import {getAppVersion} from '../api/app'
+
+  export default class Detail extends wepy.page {
+    config = {}
+    components = {
+      cmptLoadmore1: cmptLoadmore,
+      cmptLoadmore2: cmptLoadmore
+    }
+    data = {
+      item: {},
+      relatedItems: [],
+      comments: [],
+      comments_count: 0,
+      isWifi: false,
+      _true: true,
+      showLoadMore: false,
+      showNoMore: false,
+      isValid: false,
+      nextPage: '',
+      itemId: ''
+    }
+    methods = {
+      gotoDetail(item) {
+        this.videoContext.pause()
+        wepy.$instance.globalData.selectedItem = item
+        let pagesCount = getCurrentPages().length
+        console.log('pagesCount: ' + pagesCount)
+        if (pagesCount > 5) {
+          wepy.redirectTo({
+            url: 'detail'
+          })
+        } else {
+          wepy.navigateTo({
+            url: 'detail'
+          })
+        }
+      },
+      onPlay() {
+        wepy.reportAnalytics('play_video', {
+          video_id: this.item.id,
+          video_title: this.item.title,
+          video_category: this.item.category
+        })
+
+        this.saveHistory()
+      },
+      copyUrl(url) {
+        wepy.setClipboardData({data: url}).then((res) => {
+          wepy.showToast({
+            title: '复制成功',
+            icon: 'success',
+            duration: 2000
+          })
+        })
+        this.saveHistory()
+      },
+      loadMoreComments() {
+        this.showLoadMore = this.nextPage
+        this.showNoMore = !this.nextPage
+        this.$apply()
+        if (this.nextPage) {
+          this.loadComments(this.itemId, this.nextPage)
+        }
+      }
+    }
+
+    saveHistory() {
+      try {
+        let items = wx.getStorageSync('history')
+        if (!items) {
+          items = []
+        }
+        items.unshift(this.item)
+        items = uniqueArray(items)
+        wepy.setStorage({
+          key: 'history',
+          data: items
+        })
+      } catch (e) {
+        console.log(e)
+      }
+    }
+
+    onLoad(options) {
+      this.isValid = wepy.$instance.globalData.showPlayer
+      this.$apply()
+
+      let item = options.item
+      if (item) {
+        getItem(item).then((res) => {
+          this.item = res
+          this.item.durationText = secondToTime(this.item.duration)
+          this.item.dateText = new Date(item.releaseTime).toLocaleDateString()
+          this.$apply()
+        }).catch((rej) => {
+          console.log(rej)
+        })
+      } else {
+        this.item = wepy.$instance.globalData.selectedItem
+        item = this.item.id
+      }
+      this.itemId = item
+
+      getRelatedItems(item).then((res) => {
+        this.relatedItems = res
+        this.relatedItems.forEach(function (item) {
+          item.durationText = secondToTime(item.duration)
+          item.dateText = new Date(item.releaseTime).toLocaleDateString()
+        })
+        this.$apply()
+        this.loadComments(item)
+      })
+    }
+
+    loadComments(item, nextPage) {
+      getItemComments(item, nextPage).then((res) => {
+        this.comments = nextPage === undefined ? res.data : this.comments.concat(res.data)
+        this.comments_count = res.total
+        this.comments.forEach(function (item) {
+          item.createDate = new Date(item.createTime).toLocaleDateString()
+        })
+        this.nextPage = res.next_page_url
+        this.showLoadMore = this.nextPage
+        this.showNoMore = !this.nextPage
+        this.$apply()
+      })
+    }
+
+    onShow() {
+      if (this.isValid === false) {
+        getAppVersion().then((res) => {
+          wepy.$instance.globalData.showPlayer = res.is_valid
+          this.isValid = res.is_valid
+          this.$apply()
+        })
+      }
+
+      this.videoContext = wepy.createVideoContext('videoPlayer')
+      wepy.getNetworkType().then((res) => {
+        if (res.networkType === 'wifi') {
+          this.isWifi = true
+          this.$apply()
+        }
+      })
+    }
+
+    onShareAppMessage(res) {
+      return {
+        title: this.item.title,
+        path: '/pages/detail?item=' + this.item.id
+      }
+    }
+  }
+</script>
+
+<style lang="scss">
+  @import '../styles/panel.scss';
+  @import '../styles/cell.scss';
+  @import '../styles/btn.scss';
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    background-color: #555555;
+    color: #ffffff;
+    width: 100%;
+    height: 100%;
+    .grid-const {
+      height: calc(100vw * 720 / 1280);
+      .video {
+        width: 100vw;
+        height: calc(100vw * 720 / 1280);
+      }
+    }
+    .grid-var {
+      flex: 1;
+      .poster {
+        width: 100%;
+        height: calc(100vw * 720 / 1280);
+      }
+      .content {
+        height: calc(100vh - 100vw * 720 / 1280);
+      }
+      .text {
+        display: flex;
+        flex-direction: column;
+        padding: 15px;
+        .title {
+          font-size: 17px;
+          font-weight: bold;
+        }
+        .subtitle {
+          margin-top: 10px;
+          font-size: 14px;
+          color: lightgrey;
+        }
+        .detail {
+          margin-top: 15px;
+          font-size: 12px;
+          color: lightgrey;
+        }
+        .cmpt-btn {
+          margin-top: 15px;
+          margin-left: 0;
+        }
+      }
+      .cmpt-panel-title {
+        font-size: 16px;
+        font-weight: bold;
+        line-height: 1;
+        color: #fff;
+        padding: 10px 15px 10px 15px;
+      }
+      .cmpt-panel {
+        background-color: #555555;
+        .cmpt-cell {
+          padding: 4px 15px;
+          .cmpt-cell__bd {
+            display: flex;
+            .related-video {
+              image {
+                width: 150px;
+                height: 80px;
+                border-radius: 4px;
+              }
+            }
+            .related-text {
+              display: flex;
+              flex-direction: column;
+              width: 100%;
+              margin-left: 10px;
+              justify-content: center;
+              .title {
+                font-size: 14px;
+                font-weight: bold;
+              }
+              .subtitle {
+                font-size: 12px;
+                color: lightgrey;
+                margin-top: 10px;
+              }
+            }
+          }
+        }
+      }
+      .cmpt-loadmore--nomore .cmpt-loadmore__tips {
+        background-color: rgba(0, 0, 0, 0);
+      }
+      .avatar {
+        image {
+          width: 40px;
+          height: 40px;
+          border-radius: 20px;
+        }
+      }
+      .comment {
+        display: flex;
+        flex-direction: column;
+        margin-left: 10px;
+        .nickname {
+          font-size: 16px;
+        }
+        .message {
+          font-size: 14px;
+          margin-top: 10px;
+        }
+        .date {
+          font-size: 11px;
+          color: #cccccc;
+          margin-top: 15px;
+        }
+      }
+    }
+  }
+
+</style>

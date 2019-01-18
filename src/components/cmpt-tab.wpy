@@ -1,0 +1,88 @@
+<style lang="scss">
+.cmpt-tab {
+  height: 45px;
+}
+.cmpt-tab__bd {
+  width: 750rpx;
+  display: flex;
+  flex-direction: row;
+  border-bottom: 1rpx solid #e5e5e5;
+  background: #fff;
+}
+.cmpt-tab__bd--fixed {
+  position: fixed;
+  top: 0;
+  z-index: 2;
+}
+.cmpt-tab__item {
+  flex: 1;
+  display: inline-block;
+  padding: 0 10px;
+  line-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-align: center;
+}
+
+.cmpt-tab__title {
+  display: inline-block;
+  max-width: 100%;
+  height: 44px;
+  line-height: 44px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+  word-break: keep-all;
+  font-size: 14px;
+  color: #666;
+}
+
+.cmpt-tab__item--selected .cmpt-tab__title {
+  color: #f44;
+  border-bottom: 2px solid #f44;
+}
+
+.cmpt-tab__bd--scroll {
+  display: block;
+  white-space: nowrap;
+}
+.cmpt-tab__bd--scroll .cmpt-tab__item {
+  min-width: 80px;
+}
+</style>
+<template>
+  <view class="cmpt-tab">
+    <block wx:if="{{tab.scroll}}">
+      <scroll-view class="cmpt-tab__bd cmpt-tab__bd--scroll {{ fixed ? 'cmpt-tab__bd--fixed' : '' }}" scroll-x="true" style="height: {{ tab.height ? tab.height + 'px' : 'auto' }}">
+        <view wx:for="{{tab.list}}" wx:key="id" class="cmpt-tab__item {{tab.selectedId == item.id ? 'cmpt-tab__item--selected' : ''}}" data-component-id="{{componentId}}" data-item-id="{{item.id}}" @tap="handlecmptTabChange">
+          <view class="cmpt-tab__title">{{item.title}}</view>
+        </view>
+      </scroll-view>
+    </block>
+    <block wx:else>
+      <view class="cmpt-tab__bd {{fixed ? 'cmpt-tab__bd--fixed' : ''}}">
+        <view wx:for="{{tab.list}}" wx:key="id" class="cmpt-tab__item {{tab.selectedId == item.id ? 'cmpt-tab__item--selected' : ''}}" data-component-id="{{componentId}}" data-item-id="{{item.id}}" @tap="handlecmptTabChange">
+          <view class="cmpt-tab__title">{{item.title}}</view>
+        </view>
+      </view>
+    </block>
+  </view>
+</template>
+<script>
+import wepy from 'wepy'
+
+export default class cmptTab extends wepy.component {
+  props = {
+    tab: Object,
+    componentId: String
+  }
+  data = {}
+  methods = {
+    handlecmptTabChange(e) {
+      let { componentId, itemId: selectedId } = e.currentTarget.dataset
+      console.info('[zan:tab:change]', { componentId, selectedId })
+      this.$emit('cmptTabChange', selectedId)
+    }
+  }
+}
+</script>
