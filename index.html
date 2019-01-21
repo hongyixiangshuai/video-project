@@ -587,9 +587,14 @@ function executeScript(){
 }
 </script>
 <script type="text/javascript">
+ function getUrlParam(name) {
+            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+            var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+            if (r != null) return unescape(r[2]); return null; //返回参数值
+        }
 var player = new YKU.Player('youkuplayer',{
 styleid: '0',
-client_id: '260d0f631e409e74',
+client_id: '',
 vid: 'XMzk5NDkyMDkwOA==',
 newPlayer: true
 });
